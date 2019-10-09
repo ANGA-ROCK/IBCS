@@ -117,24 +117,75 @@ export class Visual implements IVisual {
         this.svg.attr("width", width);
         this.svg.attr("height", height);
 
-        let yScale = d3.scaleLinear()
-            .domain([0,viewModel.maxValue])
-            .range([height,0])
+        // let yScale = d3.scaleLinear()
+        //     .domain([0,viewModel.maxValue])
+        //     .range([height,0])
 
-        let xscale = d3.scaleBand()
+
+        // let xScale = d3.scaleBand()
+        //     .domain(viewModel.dataPoints.map(function(d){return d.category}))
+        //     .range([0, width])
+        //     .paddingInner(0.5)
+   
+            var x = d3.scaleLinear()
+            .domain([0, 100])
+            .range([ 0, width]);    
+            var y = d3.scaleBand()
+            .range([ 0, height ])
             .domain(viewModel.dataPoints.map(function(d){return d.category}))
-            .range([0, width])
-            .paddingInner(0.5)
+            .paddingInner(0.2)
+           
+
+            
 
         let bars = this.barGroup
             .selectAll(".bar")
             .data(viewModel.dataPoints)
             .enter().append("rect")
             .classed("bar", true)
-            .attr("x", function(d) { return xscale(d.category); })
-            .attr("y", function(d) { return yScale(d.value); })
-            .attr("width", xscale.bandwidth())
-            .attr("height", function(d) { return height - yScale(d.value); });
+            //.attr("x", function(d) { return xScale(d.category); })
+            .attr("x", x(0) )
+            .attr("width", function(d) { return  x(d.value) ; })
+            .attr("height", y.bandwidth() )
+            .attr("y", function(d) { return y(d.category); })
+            .attr("transform", "translate(105,10 )")
+           // .attr("width", xScale.bandwidth())
+            //.attr("height", function(d) { return height - yScale(d.value) - 50; });
+
+/* Dit stuk zorgt er voor dat er een goede Axis onder de grafiek komt
+        //https://bl.ocks.org/d3noob/23e42c8f67210ac6c678db2cd07a747e 
+        var xAxis = d3.axisBottom(xscale);
+        // Add the x Axis
+        this.svg.append("g")
+        .attr("transform", "translate(0," + (height-20) + "200)")
+        .call(d3.axisBottom(xscale));
+*/
+  // Add the x Axis
+  this.svg.append("g")
+  .attr("transform", "translate(100,10 )")
+  .style("font", "24px times")
+  .call(d3.axisLeft(y));
+
+    /*    // text label for the x axis
+        this.svg.append("text")             
+        .attr("transform",
+                "translate(" + (width/2) + " ," + 
+                            (height + 20) + ")")
+        .style("text-anchor", "middle")
+        .text("Date");
+*/
+
+// labels on top of the bar
+this.svg.selectAll(".text")  		
+	  .data(viewModel.dataPoints)
+	  .enter()
+	  .append("text")
+	  .attr("class","label")
+      .attr("x", (function(d) { return x(d.value) + y.bandwidth() - 35  ; }  ))
+      .attr("y", function(d) { return y(d.category) + y.bandwidth() / 2 ; }) 
+      // .attr("y", function(d) { return y(d.category) + 0.5; }) 
+	  .attr("dy", ".75em")
+      .text(function(d) { return d.value; });  
 
         bars.exit()
             .remove();

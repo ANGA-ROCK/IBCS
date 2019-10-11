@@ -39,9 +39,14 @@ import VisualObjectInstanceEnumerationObject = powerbi.VisualObjectInstanceEnume
 import { VisualSettings } from "./settings";
 
 import * as d3 from "d3";
+import { sum } from "d3";
 type Selection<T extends d3.BaseType> = d3.Selection<T, any, any, any>;
 
 interface DataPoint {
+    category: string;
+    value: number;
+};
+interface DataPoint1 {
     category: string;
     value: number;
 };
@@ -50,6 +55,11 @@ interface ViewModel {
     dataPoints: DataPoint[];
     maxValue: number;
 };
+interface ViewModel1 {
+    dataPoints: DataPoint1[];
+    maxValue: number;
+};
+
 
 export class Visual implements IVisual {
     private target: HTMLElement;
@@ -83,7 +93,7 @@ export class Visual implements IVisual {
     }
 
     public update(options: VisualUpdateOptions) {
-        let sample: DataPoint[] = [
+  /*      let sample: DataPoint[] = [
             {
                 category: "Apples",
                 value: 10
@@ -104,11 +114,40 @@ export class Visual implements IVisual {
                 category: "Elderberries",
                 value: 50
             }
+        ];*/
+
+        let LY: DataPoint1[] = [
+            {
+                category: "Apples",
+                value: 5
+            },
+            {
+                category: "Bananas",
+                value: 10
+            },
+            {
+                category: "Cherries",
+                value: 20
+            },
+            {
+                category: "Dates",
+                value: 20
+            },
+            {
+                category: "Elderberries",
+                value: 35
+            }
         ];
 
-        let viewModel: ViewModel = {
+ /*       let viewModel: ViewModel = {
             dataPoints: sample,
             maxValue: d3.max(sample, x => x.value)
+        };
+        */
+       let viewModel = this.getViewModel(options);
+        let dataLY: ViewModel1 = {
+            dataPoints: LY,
+            maxValue: d3.max(LY, x => x.value)
         };
 
         let width = options.viewport.width;
@@ -117,84 +156,110 @@ export class Visual implements IVisual {
         this.svg.attr("width", width);
         this.svg.attr("height", height);
 
-        // let yScale = d3.scaleLinear()
-        //     .domain([0,viewModel.maxValue])
-        //     .range([height,0])
 
-
-        // let xScale = d3.scaleBand()
-        //     .domain(viewModel.dataPoints.map(function(d){return d.category}))
-        //     .range([0, width])
-        //     .paddingInner(0.5)
-   
-            var x = d3.scaleLinear()
+        // X en Y as
+        var x = d3.scaleLinear()
             .domain([0, 100])
-            .range([ 0, width]);    
-            var y = d3.scaleBand()
-            .range([ 0, height ])
-            .domain(viewModel.dataPoints.map(function(d){return d.category}))
-            .paddingInner(0.2)
-           
+            .range([0, width]);
+        var y = d3.scaleBand()
+            .range([0, height])
+            .domain(viewModel.dataPoints.map(function (d) { return d.category }))
+            .paddingInner(0.2);
 
-            
+        // Last year bars border
+        let barsLY = this.barGroup
+            .selectAll(".barLY")
+            .data(dataLY.dataPoints)
+            .enter().append("rect")
+            .classed("barLY", true)
+            .attr("x", x(0))
+            .attr("width", function (d) { return x(d.value); })
+            .attr("height", y.bandwidth())
+            .attr("y", function (d) { return y(d.category); })
+            .attr("transform", "translate(125,2 )")
+            .attr('fill', 'none')
+            .attr('stroke', '#000000')
+            .attr('stroke-width', 1);
 
+        // Actual bars black
         let bars = this.barGroup
             .selectAll(".bar")
             .data(viewModel.dataPoints)
             .enter().append("rect")
             .classed("bar", true)
-            //.attr("x", function(d) { return xScale(d.category); })
-            .attr("x", x(0) )
-            .attr("width", function(d) { return  x(d.value) ; })
-            .attr("height", y.bandwidth() )
-            .attr("y", function(d) { return y(d.category); })
-            .attr("transform", "translate(105,10 )")
-           // .attr("width", xScale.bandwidth())
-            //.attr("height", function(d) { return height - yScale(d.value) - 50; });
+            .attr("x", x(0))
+           // .attr("width", function (d) { return x(d.value) - 100; })
+           .attr("width", function (d) { return x(d.value) / 1000000; })
+            .attr("height", y.bandwidth())
+            .attr("y", function (d) { return y(d.category); })
+            .attr("transform", "translate(125,10 )");
 
-/* Dit stuk zorgt er voor dat er een goede Axis onder de grafiek komt
-        //https://bl.ocks.org/d3noob/23e42c8f67210ac6c678db2cd07a747e 
-        var xAxis = d3.axisBottom(xscale);
         // Add the x Axis
         this.svg.append("g")
-        .attr("transform", "translate(0," + (height-20) + "200)")
-        .call(d3.axisBottom(xscale));
-*/
-  // Add the x Axis
-  this.svg.append("g")
-  .attr("transform", "translate(100,10 )")
-  .style("font", "24px times")
-  .call(d3.axisLeft(y));
+            .attr("transform", "translate(125,10 )")
+            .style("font", "24px times")
+            .call(d3.axisLeft(y));
 
-    /*    // text label for the x axis
-        this.svg.append("text")             
-        .attr("transform",
-                "translate(" + (width/2) + " ," + 
-                            (height + 20) + ")")
-        .style("text-anchor", "middle")
-        .text("Date");
-*/
-
-// labels on top of the bar
-this.svg.selectAll(".text")  		
-	  .data(viewModel.dataPoints)
-	  .enter()
-	  .append("text")
-	  .attr("class","label")
-      .attr("x", (function(d) { return x(d.value) + y.bandwidth() - 35  ; }  ))
-      .attr("y", function(d) { return y(d.category) + y.bandwidth() / 2 ; }) 
-      // .attr("y", function(d) { return y(d.category) + 0.5; }) 
-	  .attr("dy", ".75em")
-      .text(function(d) { return d.value; });  
+        // labels on top of the bar
+        this.svg.selectAll(".text")
+            .data(viewModel.dataPoints)
+            .enter()
+            .append("text")
+            .attr("class", "label")
+            .attr("x", (function (d) { return x(d.value) + y.bandwidth() + 65; }))
+            .attr("y", function (d) { return y(d.category) + y.bandwidth() / 2; })
+            .attr("dy", ".75em")
+            .text(function (d) { return d.value; });
 
         bars.exit()
             .remove();
+
+       
+
+         // Add the x Axis for delta - WERKEND!
+ /*        this.svg.append("g")
+         .attr("transform", "translate(700,10 )")
+         .call(d3.axisLeft(y))
+         .selectAll("text").remove(); 
+*/
 
         this.settings = Visual.parseSettings(options && options.dataViews && options.dataViews[0]);
         console.log('Visual update', options);
         if (typeof this.textNode !== "undefined") {
             this.textNode.textContent = (this.updateCount++).toString();
         }
+    }
+
+    //add data from power bi 
+    private getViewModel(options: VisualUpdateOptions): ViewModel{
+       let dv = options.dataViews;
+
+       let viewModel: ViewModel={
+           dataPoints: [],
+           maxValue:0
+       };
+
+       if (!dv
+        || !dv[0]
+        || !dv[0].categorical
+        || !dv[0].categorical.categories
+        || !dv[0].categorical.categories[0].source
+        || !dv[0].categorical.values)
+        return viewModel;
+
+        let view = dv[0].categorical;
+        let categories = view.categories[0];
+        let values = view.values[0];
+
+        for(let i=0, len=Math.max(categories.values.length, values.values.length); i<len; i++){
+            viewModel.dataPoints.push({
+                category: <string>categories.values[i],
+                value: <number>values.values[i]
+            });
+        }
+        viewModel.maxValue = d3.max(viewModel.dataPoints, d => d.value);
+       //verwijder null
+       return viewModel;
     }
 
     private static parseSettings(dataView: DataView): VisualSettings {

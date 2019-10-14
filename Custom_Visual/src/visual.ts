@@ -125,6 +125,15 @@ export class Visual implements IVisual {
             .domain(viewModel.dataPoints.map(function(d){return d.category}))
             .range([0, width])
             .paddingInner(0.5)
+        
+        var xAxis = d3.axisBottom(xscale)
+
+        this.svg.append("g")
+            .attr("class","x axis")
+            // .style("font-size", ""+margin.fontSize*(1+1/3)+"px")
+            .style("font-size", "10pt")
+            .attr("transform","translate(4,"+(height-50)+")")
+            .call(xAxis)
 
         let bars = this.barGroup
             .selectAll(".bar")

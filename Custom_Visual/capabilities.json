@@ -1,15 +1,31 @@
 {
+    "supportsHighlight": true,
     "dataRoles": [
         {
-            "displayName": "Category Data",
-            "name": "category",
+            "displayName": "Category",
+            "name": "Cat",
             "kind": "Grouping"
         },
         {
-            "displayName": "Measure Data",
-            "name": "measure",
+            "displayName": "Actual",
+            "name": "AC",
             "kind": "Measure"
-        }
+        },  
+        {
+            "displayName": "Previous Year",
+            "name": "PY",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Plan",
+            "name": "PL",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Forecast",
+            "name": "FC",
+            "kind": "Measure"
+        }          
     ],
     "objects": {
         "dataPoint": {
@@ -60,10 +76,29 @@
     },
     "dataViewMappings": [
         {
+            "conditions":[
+                {
+                    "Cat": {
+                        "max": 1
+                    },
+                    "AC": {
+                        "max": 1
+                    },
+                    "PY": {
+                        "max": 1
+                    },
+                    "PL": {
+                        "max": 1
+                    },
+                    "FC": {
+                        "max": 1
+                    }
+                }
+            ],
             "categorical": {
                 "categories": {
                     "for": {
-                        "in": "category"
+                        "in": "Cat"
                     },
                     "dataReductionAlgorithm": {
                         "top": {}
@@ -73,7 +108,7 @@
                     "select": [
                         {
                             "bind": {
-                                "to": "measure"
+                                "to": "AC"
                             }
                         }
                     ]
